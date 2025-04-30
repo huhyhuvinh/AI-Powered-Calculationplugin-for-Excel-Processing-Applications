@@ -88,21 +88,28 @@ The AI Calculation Plugin is a Google Sheets add-on that leverages the Gemini AP
 
 ## Example
 ### Sample Data
-![Example Image 1](https://raw.githubusercontent.com/huhyhuhvinh/AI-Powered-Calculationplugin-for-Excel-Processing-Applications/main/img/image1.png)
+![Example Image 1](https://raw.githubusercontent.com/huhyhuvinh/AI-Powered-Calculationplugin-for-Excel-Processing-Applications/main/img/image1.png)
 
 ### Using the Sidebar
 - Open the sidebar and configure:
   - Header Row: 1
-  - Prompt: `Summarize {Description}`
-  - Output Column: Summarization
-  - Model: Gemini 1.5 pro
+  - Prompt: `You are an expert in the digital marketing. You are responsible for generating product name from {{Description}}`
+  - Output Column: Product Name
+  - Model: Gemini 2.0 flash
   - Start from row: Auto, 3 rows
 - Click "Run 3 rows".
-- The "Summarization" column will be populated with summaries of the "Description" column.
+- The "Product Name" column will be populated with product name of the "Description" column.
+
+### Result
+![Example Image 2](https://raw.githubusercontent.com/huhyhuvinh/AI-Powered-Calculationplugin-for-Excel-Processing-Applications/main/img/image2.png)
 
 ### Using the Custom Function
 - In cell D2, enter:
   ```
-  =GPT_SUMMARIZE(B2, "one sentence")
+  =GPT_SUMMARIZE(B2, "Item list", 0, "gemini-1.5-pro")
   ```
-- This will summarize the text in B2 (e.g., "Stay hydrated with the EcoSip Water Bottle...") in one sentence.
+- This will summarize the text in B2 (e.g., "Stay hydrated with the EcoSip Water Bottle...") in list.
+![Example Image 3](https://raw.githubusercontent.com/huhyhuvinh/AI-Powered-Calculationplugin-for-Excel-Processing-Applications/main/img/image3.png)
+
+### Result
+![Example Image 4](https://raw.githubusercontent.com/huhyhuvinh/AI-Powered-Calculationplugin-for-Excel-Processing-Applications/main/img/image4.png)
