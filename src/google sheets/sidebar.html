@@ -1,0 +1,200 @@
+<base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+      margin: 0;
+    }
+    h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      color: #555;
+      margin: 10px 0 5px;
+    }
+    input[type="number"],
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    input[type="text"] {
+      background-color: #e6f0fa;
+    }
+    /* Updated styling for mode toggle */
+    .mode-toggle {
+      display: flex;
+      margin: 10px 0;
+      border-bottom: 1px solid #ccc;
+    }
+    .mode-toggle label {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      margin: 0;
+      cursor: pointer;
+      font-size: 14px;
+      color: #555;
+      background-color: #fff;
+      transition: background-color 0.3s;
+    }
+    .mode-toggle input {
+      display: none;
+    }
+    .mode-toggle input:checked + label {
+      background-color: #1a73e8;
+      color: white;
+    }
+    .sub-options {
+      margin-left: 20px;
+      margin-top: 5px;
+    }
+    .sub-options input[type="number"] {
+      width: 60px;
+      margin-right: 10px;
+    }
+    .sub-options label {
+      display: inline;
+      margin-right: 20px;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+    }
+    button.run {
+      background-color: #28a745;
+      color: white;
+    }
+    button.cancel {
+      background-color: #f1f3f4;
+      color: #333;
+    }
+  </style>
+
+  <h3>AI Calculation Plugin</h3>
+  <form id="configForm">
+    <label>Header Row:</label>
+    <input type="number" name="headerRow" value="1" min="1" required>
+
+    <label>Prompt to run for each row:</label>
+    <textarea rows=4 name="prompt" placeholder="e.g., Summarize {<?= headers[1] || 'Column1' ?>}" required></textarea>
+
+    <label>Output Column:</label>
+    <select name="outputCol" required>
+      <?!= headers.map(header => `<option value="${header}">${header}</option>`).join('') ?>
+    </select>
+
+    <label>Model:</label>
+    <select name="model">
+      <option value="gemini-2.0-flash" selected>Gemini 2.0 flash</option>
+      <option value="gemini-1.5-pro">Gemini 1.5 pro</option>
+    </select>
+
+    <label>Start from row:</label>
+    <div class="mode-toggle">
+      <input type="radio" id="autoMode" name="mode" value="auto" checked onchange="toggleMode(this.value)">
+      <label for="autoMode">Auto</label>
+      <input type="radio" id="fixedMode" name="mode" value="fixed" onchange="toggleMode(this.value)">
+      <label for="fixedMode">Fixed</label>
+    </div>
+    <div id="autoOptions" class="sub-options">
+      <div>
+        <label>
+          <input type="radio" name="autoRowsType" value="specific" checked onclick="toggleRowOptions(true)"> 
+          <input type="number" name="autoRows" id="rowCountInput" value="3" min="1" oninput="updateButtonText()" style="margin-left: 5px;">
+          <span style="margin-left: 5px;">rows</span>
+        </label>
+      </div>
+      <div>
+        <label>
+          <input type="radio" name="autoRowsType" value="all" onclick="toggleRowOptions(false)"> All rows
+        </label>
+      </div>
+    </div>
+    <div id="fixedOptions" class="sub-options" style="display: none;">
+      <input type="number" name="startRow" value="2" min="1">
+      <label>to</label>
+      <input type="number" name="endRow" value="4" min="1">
+    </div>
+
+    <div class="buttons">
+      <button type="submit" class="run" id="runButton" onclick="submitForm()">Run 3 rows</button>
+      <button type="button" class="cancel">Cancel</button>
+    </div>
+  </form>
+
+  <script>
+    function toggleMode(mode) {
+      document.getElementById('autoOptions').style.display = mode === 'auto' ? 'block' : 'none';
+      document.getElementById('fixedOptions').style.display = mode === 'fixed' ? 'block' : 'none';
+      updateButtonText();
+    }
+
+    function toggleRowOptions(enableSpecific) {
+      const rowCountInput = document.getElementById('rowCountInput');
+      rowCountInput.disabled = !enableSpecific;
+      updateButtonText();
+    }
+
+    function updateButtonText() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const runButton = document.getElementById('runButton');
+      if (mode === 'auto') {
+        const autoRowsType = document.querySelector('input[name="autoRowsType"]:checked').value;
+        if (autoRowsType === 'specific') {
+          const numRows = document.getElementById('rowCountInput').value;
+          runButton.textContent = `Run ${numRows} rows`;
+        } else {
+          runButton.textContent = 'Run all rows';
+        }
+      } else {
+        const startRow = document.querySelector('input[name="startRow"]').value;
+        const endRow = document.querySelector('input[name="endRow"]').value;
+        const numRows = parseInt(endRow) - parseInt(startRow) + 1;
+        runButton.textContent = `Run ${numRows} rows`;
+      }
+    }
+
+    function submitForm() {
+      event.preventDefault();
+      const form = document.getElementById('configForm');
+      const formData = {};
+      new FormData(form).forEach((value, key) => {
+        formData[key] = value;
+      });
+      // Adjust formData based on mode
+      if (formData.mode === 'auto') {
+        formData.startRow = '2'; // Default start row for Auto mode
+        formData.rowCount = formData.autoRowsType === 'all' ? 'all' : formData.autoRows;
+      } else {
+        formData.rowCount = (parseInt(formData.endRow) - parseInt(formData.startRow) + 1).toString();
+        formData.startRow = formData.startRow || '2';
+      }
+      google.script.run
+        .withSuccessHandler(result => {})
+        .withFailureHandler(error => {})
+        .processData(formData);
+    }
+  </script>
